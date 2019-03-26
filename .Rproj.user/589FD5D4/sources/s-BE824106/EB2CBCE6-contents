@@ -1,0 +1,74 @@
+---
+title: "Rladies slides"
+author: "Sebastian Jose Teran Hidalgo"
+date: "3/18/2019"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Writing functions
+
+Important recommendation:
+- Always write functions from you are using from other packages as *pkg::fun()*.
+- This will help you avoid any conflicts in the future.
+- List the package in DESCRIPTION so that it’s installed (later).
+- When using the pipe I avoid this rule and add *importFrom(dplyr, "%>%")* to NAMESPACE (later).
+
+## DESCRIPTION: Dependencies
+
+Imports: 
+- Packages listed here must be present for your package to work. They will be installed if not already.
+- It will not however attached them, meaning it does do *library(pkg_needed)*.
+- The best practice is to explicitly refer to external functions using the syntax *pkg_needed::function()*.
+- You can also add them using *usethis::use_packages()*.
+
+Suggest:
+- Put packages here that are almost never used in your package.
+- For example, only one function uses it.
+- Only shows up in examples.
+- Only a data set is needed.
+- Unlike *Imports* these will not be installed.
+
+## DESCRIPTION: Versioning
+
+- If you need a specific version of a package:
+
+```{r, eval = FALSE, echo = TRUE}
+Imports:
+    ggvis (>= 0.2),
+    dplyr (>= 0.3.0.1)
+```
+
+- In RStudio you can look under the *Packages* tab and under *Version*.
+
+## NAMESPACE: export
+
+This is important if you want to publish your package in CRAN:
+- For a function to be usable outside of your package, you must export it.
+- You might want to keep some functions private / unexposed to the user.
+- Add *#' @export* before defining your function and after your documentation.
+
+```{r eval = FALSE, echo = TRUE}
+#' @export 
+foo <- function(x, y, z) {
+  ...
+}
+```
+
+- Run *devtools::document()*.
+- Check NAMESPACE file and run tests to check that the specification is correct.
+
+## NAMESPACE: import
+
+This is important regardless of whether you want to publish in CRAN or not:
+- NAMESPACE controls which external functions can be used by your package without having to use *::*.
+- Very important if you want to use the pipe (add *importFrom(dplyr, "%>%")*).
+- It’s common for packages to be listed in Imports in DESCRIPTION, but not in NAMESPACE. 
+General recommendations:
+- List the package in DESCRIPTION so that it’s installed, then always refer to it explicitly with *pkg::fun()* (best option, most tedious). 
+- If you are using only jsut a few functions then always do this.
+- If you are using functions repeatedly you can use *importFrom(pkg, fun)*.
+- You can import all of the functions of the package with *importFrom(pkg)* (worst option, less tedious).

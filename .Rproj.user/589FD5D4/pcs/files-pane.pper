@@ -1,0 +1,13 @@
+{
+    "path" : "~/Documents/misc/rladiesnyc_package_workshop",
+    "sortOrder" : [
+        {
+            "ascending" : false,
+            "columnIndex" : 4
+        },
+        {
+            "ascending" : true,
+            "columnIndex" : 2
+        }
+    ]
+}

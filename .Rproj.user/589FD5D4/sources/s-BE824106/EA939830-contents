@@ -1,0 +1,312 @@
+---
+title: "R-Ladies NYC Package Workshop"
+author: Sebastian Teran Hidalgo
+output: 
+  ioslides_presentation:
+    incremental: true
+    widescreen: true
+    css: style.css
+    logo: logo.png
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r libraries, echo=FALSE}
+library(tidyverse)    
+library(knitr)        
+library(here)         
+```
+
+## R-Ladies NYC Package Workshop
+
+```{r, echo=FALSE, out.width='35%', fig.align='center'}
+knitr::include_graphics(here::here('images/hex_package.jpg'))
+```
+
+
+## We will cover:
+
+- Using RStudio to set up your package 
+- Package structure 
+- Dependencies
+- Creating functions 
+- Documenting functions
+- Vignettes
+- Sharing the package with others
+- Hex stickers
+
+
+## Why Make a Package?
+
+- You have used the same function 
+that you wrote multiple times
+- Your workplace uses the same functions, graph 
+themes, datasets, database connections, 
+etc and you want to easily share them
+- You want to share your timesaving work with the world
+
+
+## Packages used for making packages 
+
+- roxygen: document your package
+- devtools: use various tools for R development
+
+
+## Creating your package
+
+You can create a package in two ways: 
+
+1. From RStudio, go to the menu bar, 
+go to *File*, *New Project*, *Choose New Directory*, 
+and then select *R Package*, after giving the 
+project a name click *Create Project*
+
+2. Using devtools, you can run the following 
+code in R: 
+```{r, eval=FALSE}
+devtools::create("path/to/package/packagename")
+```
+
+
+## Once generated either way, your package will have:
+
+- an R/ directory
+- a DESCRIPTION file
+- a NAMESPACE file
+- an RStudio project file *packagename.Rproj*
+
+
+## Package structure
+```{r, echo=FALSE, out.width='80%'}
+knitr::include_graphics(here::here('images/package_structure.png'))
+```
+
+
+## R /directory
+
+- Contains an R file where we will put our functions 
+- By default it is named *Hello.R* but you can rename to anything you want
+
+
+## Example - a function that generates a simulated dataset
+```{r}
+generate_cars <- function(n_cars = 100, 
+                          dep = 0.50, 
+                          new = 15000) {
+  data.frame(mileage_per_year = rpois(n_cars, lambda = 50000)) %>% 
+    dplyr::mutate(price = new - dep * mileage_per_year)
+                          }
+```
+
+
+## Writing functions
+
+Recommendations:
+
+- Always include functions you are using from other packages as *pkg::fun()*, this will help you avoid any function name conflicts in the future
+- List the package in DESCRIPTION so that it’s installed (will cover later)
+- When using the pipe I avoid this rule and add *importFrom(dplyr, "%>%")* to NAMESPACE (will cover later)
+
+
+## DESCRIPTION file
+```{r, echo=FALSE, out.width='90%'}
+knitr::include_graphics(here::here('images/description_file.png'))
+```
+
+
+## DESCRIPTION: Dependencies
+
+*Imports*: 
+
+- Packages listed here must be present for your package to work, they will be installed if they were not already
+- However, it will not attach them, meaning it does not run  *library(pkg_needed)*
+- The best practice is to explicitly refer to external functions using the syntax *pkg_needed::function()*
+- You can also add them using *usethis::use_packages()*
+
+*Suggest*:
+
+- Unlike *Imports* these will not be installed
+- Put packages here that are almost never used in your package, eg only one function uses it, only shows up in examples, etc 
+
+
+## DESCRIPTION: Versioning
+
+- If you need a specific version of a package:
+
+```{r, eval = FALSE, echo = TRUE}
+Imports:
+    ggvis (>= 0.2),
+    dplyr (>= 0.3.0.1)
+```
+
+- In RStudio you can look under the *Packages* tab and under *Version*
+
+
+## NAMESPACE: export
+
+Important if you want to publish your package on CRAN/share your package:
+
+- For a function to be usable when loaded, you must export it
+- Add *#' @export* before defining your function and after your documentation
+
+```{r eval = FALSE, echo = TRUE}
+#' @export 
+foo <- function(x, y, z) {
+  ...
+}
+```
+
+- Run *devtools::document()*
+- Check NAMESPACE file and run tests to check that the specification is correct
+- NB: You might want to keep some functions private/unexposed to the user, in order to do that do not add *#' @export* before defining your function 
+
+
+## NAMESPACE: import
+
+This is important regardless of whether you want to publish on CRAN or not:
+
+- NAMESPACE controls which external functions can be used by your package without having to use *::*
+- Very important if you want to use the pipe (add *importFrom(dplyr, "%>%")*)
+- It’s common for packages to be listed in Imports in DESCRIPTION, but not in NAMESPACE
+
+
+## NAMESPACE: import
+
+General recommendations:
+
+- List the package in DESCRIPTION so that it’s installed, then always refer to it explicitly with *pkg::fun()* (best option, most tedious)
+- If you are using only a few functions then always do this
+- If you are using functions repeatedly you can use *importFrom(pkg, fun)*
+- You can import all of the functions of the package with *importFrom(pkg)* (worst option, less tedious)
+
+
+## Documenting your function
+
+Use the roxygen2 package 
+
+Hadley's steps:
+
+1. Add roxygen comments to your .R files
+2. Run devtools::document() to convert roxygen comments to .Rd files
+3. Preview documentation with *?your_function_name*
+4. Rinse and repeat until the documentation looks the way you want
+
+
+## Documentation Example
+
+```{r, eval=FALSE}
+#' Generates simulated car dataset
+#'
+#' This function generates a dataset that simlulates
+#' random mileage per year using parameters for the number
+#' of cars, the depreciation rate, and the average price
+#' of a new car.
+#' @param n_cars number of cars
+#' @param dep depreciation rate
+#' @param new average value of a car when new
+#' @return a dataset
+#' @examples
+#' generate_cars(n_cars = 100, dep = 0.50, new = 15000)
+
+```
+
+
+## Vignettes
+
+To create your vignette:
+
+- *devtools::use_vignette("my-vignette")*
+
+This will :
+
+- Create a *vignettes/* directory
+- Add the necessary dependencies to *DESCRIPTION*
+- Draft a vignette, *vignettes/my-vignette.Rmd*
+
+Then you can:
+
+- Modify your vignette
+- Click *Knit* on Rstudio
+
+
+## Installing Your Package
+
+- devtools::install()
+- in RStudio, under the Build Tab click the Install and Restart button
+
+```{r, echo=FALSE, out.width='80%'}
+knitr::include_graphics(here::here('images/build_tab.png'))
+```
+
+- or in the command line, you can write R CMD INSTALL packagename
+
+
+## Sharing Your Package
+
+- If your package is on github, other people can install your package by running *install_github("username/packagename")*
+- If it is on bitbucket, you can do the same thing but with
+*install_bitbucket*
+- You can run *devtools::build()* and this will generate
+a *packagename_0.1.0.tar.gz* file of your package
+- You can share this compressed file with others but 
+to install it they have to go put this file 
+in the directory where their R packages live and then 
+run *R CMD INSTALL packagename_0.1.0.tar.gz* 
+
+
+## Hex Stickers using hexSticker
+
+- Needs ImageMagik, so go to terminal and 
+brew install ImageMagick or 
+sudo port install ImageMagick 
+
+```{r, eval=FALSE}
+library(hexSticker)
+imgurl <- here::here("images/vroom.png") # give path of image
+hexSticker::sticker(imgurl,              # image path
+        package = "vroomr",              # package name on sticker
+        p_size = 8,                      # size of package name text
+        p_color = "#BD1816",             # color of package name text
+        s_x = 1,                         # x position for plot/image
+        s_y = 0.75,                      # y position for plot/image
+        s_width = 0.6,                   # width of plot/image
+        h_fill = "#ffffff",              # hexagon fill color
+        h_color = "#BD1816",             # hexagon border color
+        filename =                       # output location
+          here::here("images/vroomr_hex.png")) 
+```
+
+
+## Hex Sticker Example 
+```{r, echo=FALSE}
+knitr::include_graphics(here::here('images/vroomr_hex.png'))
+```
+
+
+## Summary of Adding Functions 
+
+- Open your package_functions.R file 
+and add your new function
+- Add the fancy comments with *#'* in order 
+to describe the function, give an example of it, 
+and export it (make sure *#' @export* is 
+at the end of your comments right before the function)
+- Now, run *devtools::document()*
+- Check that the documentation was generated properly 
+(it should be under the *man* folder or you can run *?function_name*)
+- Check that you can see *export(function_name)* 
+in the NAMESPACE file
+- On the *Build* tab, click *Install and Restart*
+and make sure it ran without any errors, 
+you should see library(package_name) in the console
+
+
+## THANK YOU
+
+- Erin Grand, @astroeringrand 
+- Emily Zabor, @zabormetrics 
+- Ludmila Janda, @ludmila_janda
+- RLadiesNYC
+- Vroomates: JF Blanchette-Guertin, Deni Stott, Laura Seiferth, Andrew McDonald, John Watson, Diego Ramallo, Pedro, Scott McBride, Eric Hepp, Molly Thrachtman, Brittney Hancock

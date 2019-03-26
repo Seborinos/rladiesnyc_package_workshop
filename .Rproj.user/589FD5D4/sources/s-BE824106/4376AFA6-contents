@@ -1,0 +1,10 @@
+generate_cars <- function(n_cars = 100, 
+                          dep = 0.50, 
+                          new = 15000) {
+  data.frame(mileage_per_year = rpois(n_cars, lambda = 50000)) %>% 
+    mutate(price = new - dep * mileage_per_year)
+}
+
+cars <- generate_cars()
+
+save(cars, file = here::here("data/cars.Rda"))
